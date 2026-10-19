@@ -1,0 +1,56 @@
+#include <stdio.h>
+
+int main()
+{
+    FILE *inputFile, *outputFile;
+    char fileName[50];
+    char op[5], a[20], b[20], result[20];
+
+    printf("Enter input file name: ");
+    scanf("%s", fileName);
+
+    inputFile = fopen(fileName, "r");
+    outputFile = fopen("output.txt", "w");
+
+    if (inputFile == NULL || outputFile == NULL)
+    {
+        printf("File cannot be opened.\n");
+        return 1;
+    }
+
+    /* Read each three-address instruction */
+    while (fscanf(inputFile, "%s %s %s %s", op, a, b, result) == 4)
+    {
+        if (op[0] == '+')
+        {
+            fprintf(outputFile, "MOV R0,%s\n", a);
+            fprintf(outputFile, "ADD R0,%s\n", b);
+            fprintf(outputFile, "MOV %s,R0\n", result);
+        }
+        else if (op[0] == '*')
+        {
+            fprintf(outputFile, "MOV R0,%s\n", a);
+            fprintf(outputFile, "MUL R0,%s\n", b);
+            fprintf(outputFile, "MOV %s,R0\n", result);
+        }
+        else if (op[0] == '-')
+        {
+            fprintf(outputFile, "MOV R0,%s\n", a);
+            fprintf(outputFile, "SUB R0,%s\n", b);
+            fprintf(outputFile, "MOV %s,R0\n", result);
+        }
+        else if (op[0] == '=')
+        {
+            /* Assignment: copy a into result */
+            fprintf(outputFile, "MOV R0,%s\n", a);
+            fprintf(outputFile, "MOV %s,R0\n", result);
+        }
+    }
+
+    fclose(inputFile);
+    fclose(outputFile);
+
+    printf("Target code generated in output.txt\n");
+
+    return 0;
+}
