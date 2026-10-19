@@ -1,0 +1,103 @@
+#include <stdio.h>
+#include <string.h>
+
+char input[100], stack[100];
+int top = 0, pos = 0;
+
+void printStep(char action[])
+{
+    stack[top + 1] = '\0';
+
+    printf("%-15s %-15s %s\n",
+           stack, input + pos, action);
+}
+
+int main()
+{
+    char action[50];
+
+    printf("Enter input (use id for identifier): ");
+    scanf("%s", input);
+
+    strcat(input, "$");
+
+    stack[0] = '$';
+    stack[1] = '\0';
+
+    printf("\nStack          Input           Action\n");
+    printStep("--");
+
+    while (input[pos] != '$' || stack[top] != 'E')
+    {
+        /* SHIFT id */
+        if (input[pos] == 'i' && input[pos + 1] == 'd')
+        {
+            stack[++top] = 'i';
+            stack[++top] = 'd';
+            pos += 2;
+            strcpy(action, "SHIFT -> id");
+        }
+        /* SHIFT an operator or parenthesis */
+        else if (input[pos] == '+' || input[pos] == '*' ||
+                 input[pos] == '(' || input[pos] == ')')
+        {
+            stack[++top] = input[pos];
+            sprintf(action, "SHIFT %c", input[pos]);
+            pos++;
+        }
+        else
+        {
+            strcpy(action, "ERROR");
+            printStep(action);
+            return 0;
+        }
+
+        printStep(action);
+
+        /* REDUCE id to E */
+        if (top >= 1 && stack[top] == 'd' && stack[top - 1] == 'i')
+        {
+            top--;
+            stack[top] = 'E';
+            strcpy(action, "REDUCE: E -> id");
+            printStep(action);
+        }
+
+        /* REDUCE (E) to E */
+        if (top >= 2 && stack[top] == ')' &&
+            stack[top - 1] == 'E' && stack[top - 2] == '(')
+        {
+            top -= 2;
+            stack[top] = 'E';
+            strcpy(action, "REDUCE: E -> (E)");
+            printStep(action);
+        }
+
+        /* REDUCE E+E to E */
+        if (top >= 2 && stack[top] == 'E' &&
+            stack[top - 1] == '+' && stack[top - 2] == 'E')
+        {
+            top -= 2;
+            stack[top] = 'E';
+            strcpy(action, "REDUCE: E -> E+E");
+            printStep(action);
+        }
+
+        /* REDUCE E*E to E */
+        if (top >= 2 && stack[top] == 'E' &&
+            stack[top - 1] == '*' && stack[top - 2] == 'E')
+        {
+            top -= 2;
+            stack[top] = 'E';
+            strcpy(action, "REDUCE: E -> E*E");
+            printStep(action);
+        }
+    }
+
+    if (input[pos] == '$' && stack[top] == 'E')
+        printf("\nInput accepted.\n");
+    else
+        printf("\nInput rejected.\n");
+
+    return 0;
+}
