@@ -1,0 +1,25 @@
+%{
+#include <stdio.h>
+int lines = 0, words = 0, chars = 0;
+%}
+%%
+[a-zA-Z0-9]+  { words++; chars += yyleng; }
+[ \t]+        { chars += yyleng; }
+\n            { lines++; chars++; }
+.             { chars++; }
+%%
+
+int yywrap()
+{
+    return 1;
+}
+int main()
+{
+    printf("Enter the text (Ctrl+D to finish):\n\n");
+    yylex();
+    printf("\nNumber of Lines = %d\n", lines);
+    printf("Number of Words = %d\n", words);
+    printf("Number of Characters = %d\n", chars);
+
+    return 0;
+}
