@@ -1,0 +1,64 @@
+#include <stdio.h>
+#include <string.h>
+
+int main()
+{
+    FILE *fp;
+    char states[20][10], s1[10], sym[10], s2[10];
+    int n, i, j, changed;
+
+    fp = fopen("input.dat", "r");
+
+    if (fp == NULL) {
+        printf("Cannot open input.dat\n");
+        return 1;
+    }
+
+    printf("Enter number of states: ");
+    scanf("%d", &n);
+
+    printf("Enter states:\n");
+    for (i = 0; i < n; i++)
+        scanf("%s", states[i]);
+
+    for (i = 0; i < n; i++) {
+        int closure[20] = {0};
+
+        closure[i] = 1;  // A state belongs to its own epsilon-closure
+
+        do {
+            changed = 0;
+            rewind(fp);
+
+            while (fscanf(fp, "%s %s %s", s1, sym, s2) == 3) {
+                if (strcmp(sym, "e") == 0) {
+                    int from = -1, to = -1;
+
+                    for (j = 0; j < n; j++) {
+                        if (strcmp(states[j], s1) == 0)
+                            from = j;
+                        if (strcmp(states[j], s2) == 0)
+                            to = j;
+                    }
+
+                    if (from != -1 && to != -1 &&
+                        closure[from] && !closure[to]) {
+                        closure[to] = 1;
+                        changed = 1;
+                    }
+                }
+            }
+        } while (changed);
+
+        printf("Epsilon closure of %s = { ", states[i]);
+
+        for (j = 0; j < n; j++)
+            if (closure[j])
+                printf("%s ", states[j]);
+
+        printf("}\n");
+    }
+
+    fclose(fp);
+    return 0;
+}
