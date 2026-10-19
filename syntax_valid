@@ -1,0 +1,47 @@
+decl.l
+
+%{
+#include "y.tab.h"
+%}
+%%
+int                 { return INT; }
+[a-zA-Z_][a-zA-Z0-9_]* { return ID; }
+[ \t]               ;             /* Ignore spaces and tabs */
+\n                  { return NL; }
+.                   { return yytext[0]; }
+%%
+int yywrap()
+{
+    return 1;
+}
+
+decl.y
+
+%{
+#include <stdio.h>
+int yylex(void);
+void yyerror(const char *s);
+%}
+
+%token INT ID NL
+
+%%
+declaration : INT id_list ';' NL
+              {
+                  printf("Valid int declaration\n");
+              }
+            ;
+id_list     : ID
+            | id_list ',' ID
+            ;
+%%
+int main()
+{
+    printf("Enter an int declaration:\n");
+    yyparse();
+    return 0;
+}
+void yyerror(const char *s)
+{
+    printf("Invalid int declaration\n");
+}
