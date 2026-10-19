@@ -1,0 +1,63 @@
+exp6.l
+
+%{
+#include "y.tab.h"
+%}
+
+%%
+[0-9]+              { return DIGIT; }
+[a-zA-Z_][a-zA-Z0-9_]* { return ID; }
+[ \t]               ;          /* Ignore spaces and tabs */
+\n                  { return NL; }
+.                   { return yytext[0]; }
+%%
+
+int yywrap()
+{
+    return 1;
+}
+
+exp6.y
+
+%{
+#include <stdio.h>
+
+int yylex(void);
+int yyerror(const char *s);
+%}
+
+%token DIGIT ID NL
+
+%left '+' '-'
+%left '*' '/'
+
+%%
+stmt : exp NL
+       {
+           printf("Valid Expression\n");
+       }
+     ;
+
+exp  : exp '+' exp
+     | exp '-' exp
+     | exp '*' exp
+     | exp '/' exp
+     | '(' exp ')'
+     | DIGIT
+     | ID
+     ;
+%%
+
+int main()
+{
+    printf("Enter an arithmetic expression:\n");
+    yyparse();
+    return 0;
+}
+
+int yyerror(const char *s)
+{
+    printf("Invalid Expression\n");
+    return 0;
+}
+
