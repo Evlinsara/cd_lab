@@ -1,0 +1,41 @@
+exp7.l
+
+%{
+#include "y.tab.h"
+%}
+%%
+[a-zA-Z][a-zA-Z0-9_]*  { return ID; }
+\n                     { return NL; }
+.                      { return yytext[0]; }
+%%
+int yywrap()
+{
+    return 1;
+}
+
+exp7.y
+
+%{
+#include <stdio.h>
+int yylex(void);
+int yyerror(const char *s);
+%}
+%token ID NL
+%%
+stmt : ID NL
+       {
+           printf("Valid Identifier\n");
+       }
+     ;
+%%
+int main()
+{
+    printf("Enter an identifier:\n");
+    yyparse();
+    return 0;
+}
+int yyerror(const char *s)
+{
+    printf("Invalid Identifier\n");
+    return 0;
+}
