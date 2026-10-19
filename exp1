@@ -1,0 +1,42 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int main() {
+    FILE *fp;
+    char ch, str[20];
+    int i = 0;
+
+    char *keywords[] = {"int", "float", "if", "else", "while", "return"};
+
+    fp = fopen("file.txt", "r");
+
+    while ((ch = fgetc(fp)) != EOF) {
+        if (isalnum(ch) || ch == '_')
+            str[i++] = ch;
+        else {
+            if (i > 0) {
+                str[i] = '\0';
+                int key = 0;
+                for (int j = 0; j < 6; j++)
+                    if (strcmp(str, keywords[j]) == 0)
+                        key = 1;
+
+                if (key)
+                    printf("%s : Keyword\n", str);
+                else
+                    printf("%s : Identifier\n", str);
+
+                i = 0;
+            }
+
+            if (strchr("+-*/=%<>", ch))
+              printf("%c : Operator\n", ch);
+            else if (strchr("(){}[];,", ch))
+              printf("%c : Special Symbol\n", ch);
+        }
+    }
+
+    fclose(fp);
+    return 0;
+}
