@@ -1,103 +1,289 @@
 #include <stdio.h>
 #include <string.h>
+/* Global declarations */
+char production[20][50];
+char stack[100];
+char input[100];
 
-char input[100], stack[100];
-int top = 0, pos = 0;
+int n;
+int top;
+int ip;
 
-void printStep(char action[])
+/* Find production using RHS */
+int findProduction(char rhs[])
 {
-    stack[top + 1] = '\0';
-
-    printf("%-15s %-15s %s\n",
-           stack, input + pos, action);
+    int i;
+    for (i = 0; i < n; i++)
+    {
+        if (strcmp(strchr(production[i], '>') + 1, rhs) == 0)
+            return i;
+    }
+    return -1;
 }
 
+/* Print stack correctly - avoids old characters like 'd' */
+void printStack()
+{
+    int i;
+    for (i = 0; i < top; i++)
+        printf("%c", stack[i]);
+}
+
+/* Print one row */
+void printRow(char action[])
+{
+    printStack();
+    for (int i = top; i < 20; i++)
+        printf(" ");
+
+    printf("%-20s", &input[ip]);
+    printf("%s\n", action);
+}
+
+/* Reduce E -> id */
+int reduce_id()
+{
+    int p;
+    p = findProduction("id");
+    if (p != -1 &&
+        top >= 3 &&
+        stack[top - 2] == 'i' &&
+        stack[top - 1] == 'd')
+    {
+        top -= 2;
+        stack[top++] = production[p][0];
+        {
+            char action[100];
+            sprintf(action,
+                    "REDUCE TO %c (%s)",
+                    production[p][0],
+                    production[p]);
+            printRow(action);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+/* Reduce E -> (E) */
+int reduce_bracket()
+{
+    int p;
+    p = findProduction("(E)");
+    if (p != -1 &&
+        top >= 4 &&
+        stack[top - 3] == '(' &&
+        stack[top - 2] == 'E' &&
+        stack[top - 1] == ')')
+    {
+        top -= 3;
+        stack[top++] = production[p][0];
+        {
+            char action[100];
+            sprintf(action,
+                    "REDUCE TO %c (%s)",
+                    production[p][0],
+                    production[p]);
+            printRow(action);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+/* Reduce E -> E*E */
+int reduce_star()
+{
+    int p;
+    p = findProduction("E*E");
+    if (p != -1 &&
+        top >= 4 &&
+        stack[top - 3] == 'E' &&
+        stack[top - 2] == '*' &&
+        stack[top - 1] == 'E')
+    {
+        top -= 3;
+        stack[top++] = production[p][0];
+        {
+            char action[100];
+            sprintf(action,
+                    "REDUCE TO %c (%s)",
+                    production[p][0],
+                    production[p]);
+            printRow(action);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+/* Reduce E -> E+E */
+int reduce_plus()
+{
+    int p;
+    p = findProduction("E+E");
+    if (p != -1 &&
+        top >= 4 &&
+        stack[top - 3] == 'E' &&
+        stack[top - 2] == '+' &&
+        stack[top - 1] == 'E')
+    {
+        top -= 3;
+        stack[top++] = production[p][0];
+        {
+            char action[100];
+            sprintf(action,
+                    "REDUCE TO %c (%s)",
+                    production[p][0],
+                    production[p]);
+            printRow(action);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+/* Reduce according to priority */
+int reduce()
+{
+    /* First reduce id */
+    if (reduce_id())
+        return 1;
+    /* Reduce (E) */
+    if (reduce_bracket())
+        return 1;
+    /* '*' has higher priority than '+' */
+    if (input[ip] == '$')
+    {
+        if (reduce_star())
+            return 1;
+        if (reduce_plus())
+            return 1;
+    }
+    /* If next input is '*',
+       do not reduce E+E yet. */
+    if (input[ip] == '*')
+    {
+        if (reduce_star())
+            return 1;
+        return 0;
+    }
+    /* Otherwise reduce E+E */
+    if (reduce_plus())
+        return 1;
+    return 0;
+}
+
+/* Main function */
 int main()
 {
-    char action[50];
-
-    printf("Enter input (use id for identifier): ");
+    int i;
+    int len;
+    /* Read grammar productions */
+    printf("Enter number of productions: ");
+    scanf("%d", &n);
+    printf("\nEnter the grammar productions:\n");
+    for (i = 0; i < n; i++)
+        scanf("%s", production[i]);
+    /* Read input string */
+    printf("\nEnter input string: ");
     scanf("%s", input);
+    /* Add $ at end of input */
+    len = strlen(input);
+    input[len] = '$';
+    input[len + 1] = '\0';
+    /* Initialize stack */
+    top = 0;
+    ip = 0;
+    stack[top++] = '$';
 
-    strcat(input, "$");
-
-    stack[0] = '$';
-    stack[1] = '\0';
-
-    printf("\nStack          Input           Action\n");
-    printStep("--");
-
-    while (input[pos] != '$' || stack[top] != 'E')
+    /* Print parsing table header */
+    printf("\nStack Implementation Table\n");
+    printf("---------------------------------------------------------------\n");
+    printf("%-20s %-20s %s\n",
+           "Stack", "Input", "Action");
+    printf("---------------------------------------------------------------\n");
+    /* Print initial configuration */
+    printf("$");
+    printf("                   ");
+    printf("%-20s", input);
+    printf("--\n");
+    /* SHIFT PHASE */
+    while (input[ip] != '$')
     {
         /* SHIFT id */
-        if (input[pos] == 'i' && input[pos + 1] == 'd')
+        if (input[ip] == 'i' &&
+            input[ip + 1] == 'd')
         {
-            stack[++top] = 'i';
-            stack[++top] = 'd';
-            pos += 2;
-            strcpy(action, "SHIFT -> id");
+            stack[top++] = 'i';
+            stack[top++] = 'd';
+
+            ip += 2;
+            printRow("SHIFT -> id");
+            /* Immediately reduce id -> E */
+            while (reduce_id());
+            continue;
         }
-        /* SHIFT an operator or parenthesis */
-        else if (input[pos] == '+' || input[pos] == '*' ||
-                 input[pos] == '(' || input[pos] == ')')
+        /* SHIFT + */
+        if (input[ip] == '+')
         {
-            stack[++top] = input[pos];
-            sprintf(action, "SHIFT %c", input[pos]);
-            pos++;
-        }
-        else
-        {
-            strcpy(action, "ERROR");
-            printStep(action);
-            return 0;
+            stack[top++] = '+';
+            ip++;
+            printRow("SHIFT -> +");
+            /* Do not reduce E+E if next input is * */
+            continue;
         }
 
-        printStep(action);
-
-        /* REDUCE id to E */
-        if (top >= 1 && stack[top] == 'd' && stack[top - 1] == 'i')
+        /* SHIFT * */
+        if (input[ip] == '*')
         {
-            top--;
-            stack[top] = 'E';
-            strcpy(action, "REDUCE: E -> id");
-            printStep(action);
+            stack[top++] = '*';
+            ip++;
+            printRow("SHIFT -> *");
+            continue;
         }
 
-        /* REDUCE (E) to E */
-        if (top >= 2 && stack[top] == ')' &&
-            stack[top - 1] == 'E' && stack[top - 2] == '(')
+        /* SHIFT ( */
+        if (input[ip] == '(')
         {
-            top -= 2;
-            stack[top] = 'E';
-            strcpy(action, "REDUCE: E -> (E)");
-            printStep(action);
+            stack[top++] = '(';
+            ip++;
+            printRow("SHIFT -> (");
+            continue;
         }
 
-        /* REDUCE E+E to E */
-        if (top >= 2 && stack[top] == 'E' &&
-            stack[top - 1] == '+' && stack[top - 2] == 'E')
+        /* SHIFT ) */
+        if (input[ip] == ')')
         {
-            top -= 2;
-            stack[top] = 'E';
-            strcpy(action, "REDUCE: E -> E+E");
-            printStep(action);
+            stack[top++] = ')';
+            ip++;
+            printRow("SHIFT -> )");
+            while (reduce());
+            continue;
         }
 
-        /* REDUCE E*E to E */
-        if (top >= 2 && stack[top] == 'E' &&
-            stack[top - 1] == '*' && stack[top - 2] == 'E')
-        {
-            top -= 2;
-            stack[top] = 'E';
-            strcpy(action, "REDUCE: E -> E*E");
-            printStep(action);
-        }
+        /* Invalid input symbol */
+        printf("\nInput string is REJECTED.\n");
+        return 0;
     }
 
-    if (input[pos] == '$' && stack[top] == 'E')
-        printf("\nInput accepted.\n");
-    else
-        printf("\nInput rejected.\n");
+    /* INPUT IS $ */
+    /* First reduce E*E */
+    while (reduce_star());
+    /* Then reduce E+E */
+    while (reduce_plus());
 
+    /* FINAL ACCEPTANCE */
+    if (top == 2 &&
+        stack[0] == '$' &&
+        stack[1] == 'E')
+    {
+        printRow("ACCEPT");
+        printf("\nInput string is ACCEPTED.\n");
+    }
+    else
+    {
+        printf("\nInput string is REJECTED.\n");
+    }
     return 0;
 }
