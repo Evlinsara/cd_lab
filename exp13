@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 
-/* Function to generate intermediate code */
 void generate(char *e, char *ops, char *t)
 {
     int i, n, found;
@@ -9,54 +8,46 @@ void generate(char *e, char *ops, char *t)
     {
         n = strlen(e);
         found = 0;
-
-        /* Find an operator in the expression */
         for (i = 1; i < n - 1; i++)
         {
             if (strchr(ops, e[i]))
             {
-                /* Generate three-address code */
                 printf("\t\t%c := %c%c%c\n",
                        *t,
                        e[i - 1],
                        e[i],
                        e[i + 1]);
 
-                /* Replace the expression with a temporary */
                 e[i - 1] = *t;
                 memmove(&e[i],
                         &e[i + 2],
                         n - i - 1);
-                /* Move to the next temporary variable */
                 (*t)--;
                 found = 1;
                 break;
             }
         }
-        /* Stop if no operator is found */
         if (!found)
             break;
     }
 }
-
-/* Main function */
 int main()
 {
     char e[50];
     char t = 'Z';
     printf("\t\tINTERMEDIATE CODE GENERATION\n\n");
-    /* Read the expression */
+   
     printf("Enter the Expression : ");
     scanf("%49s", e);
-    /* Extract expression after ':' if present */
+   
     char *p = strrchr(e, ':');
     if (p)
         strcpy(e, p + 1);
-    /* Generate intermediate code */
+    
     printf("The intermediate code:\n");
-    /* First process multiplication and division */
+    
     generate(e, "*/", &t);
-    /* Then process addition and subtraction */
+    
     generate(e, "+-", &t);
     return 0;
 }
