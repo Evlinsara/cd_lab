@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-/* Global declarations */
 char production[20][50];
 char stack[100];
 char input[100];
@@ -9,7 +8,6 @@ int n;
 int top;
 int ip;
 
-/* Find production using RHS */
 int findProduction(char rhs[])
 {
     int i;
@@ -21,7 +19,6 @@ int findProduction(char rhs[])
     return -1;
 }
 
-/* Print stack correctly - avoids old characters like 'd' */
 void printStack()
 {
     int i;
@@ -29,7 +26,6 @@ void printStack()
         printf("%c", stack[i]);
 }
 
-/* Print one row */
 void printRow(char action[])
 {
     printStack();
@@ -40,7 +36,6 @@ void printRow(char action[])
     printf("%s\n", action);
 }
 
-/* Reduce E -> id */
 int reduce_id()
 {
     int p;
@@ -65,7 +60,6 @@ int reduce_id()
     return 0;
 }
 
-/* Reduce E -> (E) */
 int reduce_bracket()
 {
     int p;
@@ -91,7 +85,6 @@ int reduce_bracket()
     return 0;
 }
 
-/* Reduce E -> E*E */
 int reduce_star()
 {
     int p;
@@ -117,7 +110,6 @@ int reduce_star()
     return 0;
 }
 
-/* Reduce E -> E+E */
 int reduce_plus()
 {
     int p;
@@ -143,16 +135,13 @@ int reduce_plus()
     return 0;
 }
 
-/* Reduce according to priority */
 int reduce()
 {
-    /* First reduce id */
     if (reduce_id())
         return 1;
-    /* Reduce (E) */
     if (reduce_bracket())
         return 1;
-    /* '*' has higher priority than '+' */
+
     if (input[ip] == '$')
     {
         if (reduce_star())
@@ -160,58 +149,53 @@ int reduce()
         if (reduce_plus())
             return 1;
     }
-    /* If next input is '*',
-       do not reduce E+E yet. */
+
     if (input[ip] == '*')
     {
         if (reduce_star())
             return 1;
         return 0;
     }
-    /* Otherwise reduce E+E */
     if (reduce_plus())
         return 1;
     return 0;
 }
 
-/* Main function */
 int main()
 {
     int i;
     int len;
-    /* Read grammar productions */
+
     printf("Enter number of productions: ");
     scanf("%d", &n);
     printf("\nEnter the grammar productions:\n");
     for (i = 0; i < n; i++)
         scanf("%s", production[i]);
-    /* Read input string */
+    
     printf("\nEnter input string: ");
     scanf("%s", input);
-    /* Add $ at end of input */
+    
     len = strlen(input);
     input[len] = '$';
     input[len + 1] = '\0';
-    /* Initialize stack */
+   
     top = 0;
     ip = 0;
     stack[top++] = '$';
 
-    /* Print parsing table header */
     printf("\nStack Implementation Table\n");
     printf("---------------------------------------------------------------\n");
     printf("%-20s %-20s %s\n",
            "Stack", "Input", "Action");
     printf("---------------------------------------------------------------\n");
-    /* Print initial configuration */
+
     printf("$");
     printf("                   ");
     printf("%-20s", input);
     printf("--\n");
-    /* SHIFT PHASE */
+    
     while (input[ip] != '$')
     {
-        /* SHIFT id */
         if (input[ip] == 'i' &&
             input[ip + 1] == 'd')
         {
@@ -220,21 +204,19 @@ int main()
 
             ip += 2;
             printRow("SHIFT -> id");
-            /* Immediately reduce id -> E */
+            
             while (reduce_id());
             continue;
         }
-        /* SHIFT + */
+       
         if (input[ip] == '+')
         {
             stack[top++] = '+';
             ip++;
             printRow("SHIFT -> +");
-            /* Do not reduce E+E if next input is * */
             continue;
         }
 
-        /* SHIFT * */
         if (input[ip] == '*')
         {
             stack[top++] = '*';
@@ -243,7 +225,6 @@ int main()
             continue;
         }
 
-        /* SHIFT ( */
         if (input[ip] == '(')
         {
             stack[top++] = '(';
@@ -252,7 +233,6 @@ int main()
             continue;
         }
 
-        /* SHIFT ) */
         if (input[ip] == ')')
         {
             stack[top++] = ')';
@@ -261,19 +241,13 @@ int main()
             while (reduce());
             continue;
         }
-
-        /* Invalid input symbol */
         printf("\nInput string is REJECTED.\n");
         return 0;
     }
 
-    /* INPUT IS $ */
-    /* First reduce E*E */
     while (reduce_star());
-    /* Then reduce E+E */
     while (reduce_plus());
 
-    /* FINAL ACCEPTANCE */
     if (top == 2 &&
         stack[0] == '$' &&
         stack[1] == 'E')
