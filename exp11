@@ -7,9 +7,9 @@ int n, pos = 0, sl = 0;
 
 void conv(char *s,char *t){
 	int i,j;
-	for(i=0,j=0; s[i]; i++,j++){
+	for(i=0,j=0; s[i]!='\0'; i++,j++){
 		t[j] = s[i];
-		if(s[i]=='i') i++;
+		if(s[i]=='i' && s[i+1]=='d') i++;
 	}	
 	t[j] = '\0';
 }
@@ -54,7 +54,13 @@ int main(){
 	for(int i=0;i<n;i++){
 		scanf("%s",p[i]);
 		lhs[i] = p[i][0];
-		conv(p[i]+3,rhs[i]);		
+		if(strcmp(p[i]+3,"id")==0)
+			strcpy(rhs[i],"i");
+		else strcpy(rhs[i],p[i]+3);
+	}
+	printf("Checking productions:");
+	for (int i=0;i<n;i++){
+		printf("lhs=%c, rhs=%s\n",lhs[i],rhs[i]);
 	}
 	printf("\nEnter input string: ");
 	scanf("%s",temp);
