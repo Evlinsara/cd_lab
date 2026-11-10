@@ -19,21 +19,17 @@ int main() {
                 str[i] = '\0';
                 int key = 0;
                 for (int j = 0; j < 6; j++)
-                    if (strcmp(str, keywords[j]) == 0)
-                        key = 1;
+                    if (strcmp(str, keywords[j]) == 0) key = 1;
 
-                if (key)
-                    printf("%s : Keyword\n", str);
-                else
-                    printf("%s : Identifier\n", str);
-
+                if (key)  printf("%s : Keyword\n", str);
+                else if(isdigit((unsigned char)str[0])) printf("%s: Number\n",str);
+                else  printf("%s : Identifier\n", str);
                 i = 0;
             }
-
-            if (strchr("+-*/=%<>", ch))
-              printf("%c : Operator\n", ch);
-            else if (strchr("(){}[];,", ch))
-              printf("%c : Special Symbol\n", ch);
+            if(ch==' ' ||ch=='\t' ||ch=='\n') continue;
+            if(isspace(ch)) continue;
+            if (strchr("+-*/=%<>", ch))  printf("%c : Operator\n", ch);
+            else if (strchr("(){}[];,", ch)) printf("%c : Special Symbol\n", ch);
         }
     }
 
